@@ -70,12 +70,18 @@ st.markdown(
     Invece per le misure del sistema in fibra otica non è stata fatta nessuna conversione e i valori sono ancora in radianti."""
 )
 
+dB_scale = st.checkbox("NATO in dB/1µPa", value=True)
+
 for group in ampiezze.keys():
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Scatter(
             x=ampiezze[group]["frequenze"],
-            y=idrofono_to_dBuPa(ampiezze[group]["nato"]),
+            y=(
+                idrofono_to_dBuPa(ampiezze[group]["nato"])
+                if dB_scale
+                else ampiezze[group]["nato"]
+            ),
             name="Nato",
         ),
         secondary_y=False,
@@ -92,7 +98,9 @@ for group in ampiezze.keys():
         secondary_y=True,
     )
     fig.update_yaxes(
-        title_text="Ampiezza Nato (dB/1µPa)", title_font_color="blue", secondary_y=False
+        title_text="Ampiezza Nato (dB/1µPa)" if dB_scale else "Ampiezza Nato (V)",
+        title_font_color="blue",
+        secondary_y=False,
     )
     fig.update_xaxes(title_text="Frequenza (Hz)")
     fig.update_layout(
