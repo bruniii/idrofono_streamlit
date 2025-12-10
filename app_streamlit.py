@@ -23,6 +23,10 @@ def idrofono_to_dBuPa(amplitudes: npt.ArrayLike) -> npt.ArrayLike:
     return 20 * np.log10(2 * amplitudes / np.sqrt(8)) + 217
 
 
+def coh_to_dBuPa(amplitudes: npt.ArrayLike, offset: float = 0) -> npt.ArrayLike:
+    return 20 * np.log10(2 * amplitudes / np.sqrt(8)) + offset
+
+
 FILE = "dati_elaborati.h5"
 ampiezze: dict[str, dict[str, npt.ArrayLike]] = dict()
 
@@ -70,7 +74,9 @@ st.markdown(
     Invece per le misure del sistema in fibra otica non è stata fatta nessuna conversione e i valori sono ancora in radianti."""
 )
 
-dB_scale = st.checkbox("NATO in dB/1µPa", value=True)
+nato_dB_scale = st.checkbox("NATO in dB/1µPa", value=True)
+coh_dB_scale = st.checkbox("Cohaerentia in dB", value=False)
+coh_dB_offset = st.number_input("Sensitivity Cohaerentia", value=0.0)
 
 for group in ampiezze.keys():
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -79,7 +85,7 @@ for group in ampiezze.keys():
             x=ampiezze[group]["frequenze"],
             y=(
                 idrofono_to_dBuPa(ampiezze[group]["nato"])
-                if dB_scale
+                if nato_dB_scale
                 else ampiezze[group]["nato"]
             ),
             name="Nato",
@@ -88,17 +94,27 @@ for group in ampiezze.keys():
     )
     fig.add_trace(
         go.Scatter(
-            x=ampiezze[group]["frequenze"], y=ampiezze[group]["coh"], name="Cohaerentia"
+            x=ampiezze[group]["frequenze"],
+            y=(
+                coh_to_dBuPa(ampiezze[group]["coh"], offset=coh_dB_offset)
+                if coh_dB_scale
+                else ampiezze[group]["coh"]
+            ),
+            name="Cohaerentia",
         ),
         secondary_y=True,
     )
     fig.update_yaxes(
-        title_text="Ampiezza Cohaerentia (rad)",
+        title_text=(
+            "Ampiezza Cohaerentia (dB)"
+            if coh_dB_scale
+            else "Ampiezza Cohaerentia (rad)"
+        ),
         title_font_color="red",
         secondary_y=True,
     )
     fig.update_yaxes(
-        title_text="Ampiezza Nato (dB/1µPa)" if dB_scale else "Ampiezza Nato (V)",
+        title_text="Ampiezza Nato (dB/1µPa)" if nato_dB_scale else "Ampiezza Nato (V)",
         title_font_color="blue",
         secondary_y=False,
     )
