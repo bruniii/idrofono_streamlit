@@ -132,13 +132,17 @@ fig_coh = go.Figure(
     layout=dict(
         title="<b>Confronto elementi Cohaerentia</b>",
         xaxis_title="Frequenza (Hz)",
-        yaxis_title="Ampiezza (rad)",
+        yaxis_title="Ampiezza (rad)" if not coh_dB_scale else "Ampiezza (dB)",
     ),
     data=[
         go.Scatter(
             name=ampiezze[group]["label"],
             x=ampiezze[group]["frequenze"],
-            y=ampiezze[group]["coh"],
+            y=(
+                coh_to_dBuPa(ampiezze[group]["coh"], offset=coh_dB_offset)
+                if coh_dB_scale
+                else ampiezze[group]["coh"]
+            ),
         )
         for group in top_groups
     ],
